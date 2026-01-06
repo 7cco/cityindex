@@ -41,7 +41,7 @@ class Locality(models.Model):
             return 0.0
         eco_score = min(eco.ndfl_per_capita / eco.ndfl_median(self.region), 1.5)    
         unemployment = eco.unemployment_rate or 5.0
-        demo_score = max(0, 1 - unemployment / 10)    
+        demo_score = max(0, 1 - unemployment / 100)    
         infra_score = 0.0
         if hasattr(self, 'infrastructure'):
             infra_score = self.infrastructure.infra_score(self.region)        
@@ -123,8 +123,8 @@ class InfrastructureData(models.Model):
         return f"Инфраструктура: {self.locality.city}"
     
     @classmethod
-    def infra_median(self,region_name):
-        qs=self.objects.filter(
+    def infra_median(cls,region_name):
+        qs=cls.objects.filter(
             locality__region=region_name,
             locality__is_active=True
         ).annotate(

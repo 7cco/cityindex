@@ -3,4 +3,7 @@
 {% block content %}
 <h1>{{ title }}</h1>
 <p>{{ message }}</p>
+    <a href="{% url 'main' %}" class="btn btn-outline-primary">
+        Link to main page
+    </a>
 {% endblock %}

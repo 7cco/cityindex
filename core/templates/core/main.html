@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Отладка данных</h1>
+    <a href="{% url 'admin:core_locality_changelist' %}" class="btn btn-outline-primary">
+        Редактировать в админке
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Фильтры</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                {{ form.region.label_tag }}
+                {{ form.region }}
+                {% if form.region.errors %}<div class="text-danger">{{ form.region.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+                {{ form.population_min.label_tag }}
+                {{ form.population_min }}
+                {% if form.population_min.errors %}<div class="text-danger">{{ form.population_min.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+                {{ form.population_max.label_tag }}
+                {{ form.population_max }}
+                {% if form.population_max.errors %}<div class="text-danger">{{ form.population_max.errors }}</div>{% endif %}
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Применить</button>
+            </div>
+        </form>
+        {% if request.GET %}
+        <div class="mt-3">
+            <a href="{% url 'main' %}" class="btn btn-outline-secondary btn-sm">Сбросить фильтры</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Cities compare</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'compare' %}">
+            {% csrf_token %}
+            <div class="row">
+                {% for city in cities %}
+            <div class="col">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                        name="cities" value="{{ city.id }}" id="city_{{ city.id }}">
+                    <label for="city_{{ city.id }}">
+                        {{city.city}}
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if cities %}
+        <button type="submit" class="btn btn-success mt-2">
+            <i class="fsd fa-chart-bar"></i>Compare chosed
+        </button>
+        {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if cities %}
+<div class="alert alert-info">
+    Найдено {{ cities.count }} активных городов. Индекс пересчитывается при сохранении в админке.
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Город</th>
+                <th>Население</th>
+                <th>НДФЛ</th>
+                <th>Школы</th>
+                <th>АЗС</th>
+                <th>Остановки</th>
+                <th>Индекс</th>
+                <th>Статус</th>
+                <th>Choice</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for city in cities %}
+            <tr class="
+                {% if city.calculate_inv_index  >= 0.7 %}index-high
+                {% elif city.calculate_inv_index  >= 0.4 %}index-medium
+                {% else %}index-low{% endif %}">
+                <td><strong>{{ city.city }}</strong><br><small>{{ city.region }}</small></td>
+                <td>{{ city.population }}</td>
+                <td>
+                    {% if city.economics.exists %}
+                        {% with eco=city.economics.first %}
+                            {{ eco.ndfl_total|floatformat:0 }} ₽
+                            {% if eco.unemployment_rate %}({{ eco.unemployment_rate }}% безраб.){% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if city.infrastructure %}{{ city.infrastructure.schools }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if city.infrastructure %}{{ city.infrastructure.gas_stations }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if city.infrastructure %}{{ city.infrastructure.bus_stops }}{% else %}—{% endif %}
+                </td>
+                <td class="fw-bold">
+                    {% with index=city.calculate_inv_index %}
+                    {{index|floatformat:2}}
+                    {%endwith%}
+                </td>
+                <td>
+                    {% if city.calculate_inv_index  >= 0.7 %}
+                        <span class="badge bg-success">Высокий</span>
+                    {% elif city.calculate_inv_index  >= 0.4 %}
+                        <span class="badge bg-warning text-dark">Средний</span>
+                    {% else %}
+                        <span class="badge bg-danger">Низкий</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <input type="checkbox" name="cities" value="{{city.id}}"
+                        {% if city.id in selected_cities %}checked{% endif %}>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="alert alert-warning">
+    <h3>Нет данных</h3>
+    <p>Добавьте города через <a href="{% url 'admin:core_locality_changelist' %}">админку</a>.</p>
+    <ul>
+        <li>Создайте город</li>
+        <li>Добавьте экономические данные (вкладка "Economic data")</li>
+        <li>Добавьте инфраструктуру (вкладка "Infrastructure")</li>
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
