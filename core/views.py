@@ -2,6 +2,7 @@ from django.shortcuts import render,redirect
 from core.models import Locality
 from .forms import CityFilterForm, ComprasionForm
 from django.contrib import messages
+import plotly.graph_objects as go
 
 
 def home_view(request):
@@ -39,35 +40,41 @@ def compare_cities(request):
         if form.is_valid():
             cities=form.cleaned_data['cities']
             categories=['Economics','Demography','Infrasrtucture']
-            plot_data=[]
+            fig=go.Figure()
 
             for city in cities:
                 eco=city.economics.order_by('-year').first()
                 if not eco:
                     continue
 
-                eco_score = min(eco.ndfl_per_capita / eco.ndfl_median(city.region), 1.5)    
-                unemployment = eco.unemployment_rate
-                demo_score = max(0, 1 - unemployment / 100)    
+                eco_score = min(eco.ndfl_per_capita / eco.ndfl_median(city.region), 1)    
+                demo_score = max(0, 1 - eco.unemployment_rate / 100)    
                 if hasattr(city, 'infrastructure'):
                     infra_score = city.infrastructure.infra_score(city.region)  
-                pop_k = city.population/1000
-                infra = getattr(city, 'infrastructure', None)
-                plot_data.append({
-                    'city':city.city,
-                    'score': [eco_score,demo_score, infra_score],
-                    'ndfl_pc':eco.ndfl_per_capita,
-                    'unemployment':eco.unemployment_rate,
-                    'schools_per_1k':infra.schools/pop_k,
-                    'gas_per_1k':infra.gas_stations/pop_k,
-                    'bus_per_1k':infra.bus_stops/pop_k,
-                    'index':city.calculate_inv_index()
-                })
+
+                fig.add_trace(go.Bar(
+                    name=city.city,
+                    x=categories,
+                    y=[eco_score,demo_score, infra_score],
+                    text=[f"{eco_score:.2f}",f"{demo_score:.2f}",f"{infra_score:.2f}"],
+                    textposition='auto'
+                ))
+            fig.update_layout(
+                title="Compare components of inv index",
+                barmode='group',
+                yaxis=dict(range=[0, 1.5], title="Score"),
+                xaxis=dict(title="Components of index")
+            )
+
+            chart_html = fig.to_html(
+                full_html=False,
+                include_plotlyjs='cdn',
+                config={'displayModebar': False}
+            )
 
             return render(request, 'core/compare.html',{
                 'cities':cities,
-                'plot_data':plot_data,
-                'categories': categories
+                'chart_html': chart_html,
             })
         else:
             messages.error(request,"Error: " + "; ".join(form.errors['cities']))

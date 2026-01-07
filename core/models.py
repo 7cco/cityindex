@@ -39,7 +39,7 @@ class Locality(models.Model):
         eco = self.economics.order_by('-year').first()
         if not eco:
             return 0.0
-        eco_score = min(eco.ndfl_per_capita / eco.ndfl_median(self.region), 1.5)    
+        eco_score = min(eco.ndfl_per_capita / eco.ndfl_median(self.region), 1)    
         unemployment = eco.unemployment_rate or 5.0
         demo_score = max(0, 1 - unemployment / 100)    
         infra_score = 0.0
