@@ -87,7 +87,6 @@
                 <th>Остановки</th>
                 <th>Индекс</th>
                 <th>Статус</th>
-                <th>Choice</th>
             </tr>
         </thead>
         <tbody>
@@ -130,10 +129,6 @@
                     {% else %}
                         <span class="badge bg-danger">Низкий</span>
                     {% endif %}
-                </td>
-                <td>
-                    <input type="checkbox" name="cities" value="{{city.id}}"
-                        {% if city.id in selected_cities %}checked{% endif %}>
                 </td>
             </tr>
             {% endfor %}
