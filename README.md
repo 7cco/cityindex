@@ -37,11 +37,11 @@ Frontend: Bootstrap 5, Plotly.js
 ```
 
 # Внешний вид
-![img.png](img.png)
+![img.png](RD-md/img.png)
 
-![img_1.png](img_1.png)
+![img_1.png](RD-md/img_1.png)
 
-![img_3.png](img_3.png)
+![img_3.png](RD-md/img_3.png)
 
 # Инструкция по запуску
 
