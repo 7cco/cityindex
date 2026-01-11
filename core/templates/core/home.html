@@ -1,9 +1,91 @@
 {% extends "base.html" %}
 
+{% block title %}ГородИндекс — Оценка инвестиционного потенциала малых городов{% endblock %}
+
 {% block content %}
-<h1>{{ title }}</h1>
-<p>{{ message }}</p>
-    <a href="{% url 'main' %}" class="btn btn-outline-primary">
-        Link to main page
-    </a>
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">🏙️ ГородИндекс</h1>
+        <p class="lead text-muted">
+            Сервис оценки инвестиционного потенциала малых городов РФ<br>
+            на основе открытых данных Росстата, ФНС и инфраструктуры
+        </p>
+    </div>
+
+    <div class="row text-center mb-5">
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+                <h2 class="display-6">{{ cities_count }}</h2>
+                <p class="text-muted">Городов в базе</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+                <h2 class="display-6">{{ regions_count }}</h2>
+                <p class="text-muted">Регионов</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded">
+                <h2 class="display-6">{{ avg_index|floatformat:2 }}</h2>
+                <p class="text-muted">Средний индекс</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-5">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">ТОП-5 городов по инвестиционному потенциалу</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Место</th>
+                        <th>Город</th>
+                        <th>Регион</th>
+                        <th>Индекс</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for city, index in top_cities_with_index %}
+                    <tr class="
+                        {% if index >= 0.7 %}table-success
+                        {% elif index >= 0.4 %}table-warning
+                        {% else %}table-danger{% endif %}">
+                        <td><strong>{{ forloop.counter }}</strong></td>
+                        <td>{{ city.city }}</td>
+                        <td>{{ city.region }}</td>
+                        <td class="fw-bold">{{ index|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-5">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">🔍 Как работать с сервисом</h5>
+        </div>
+        <div class="card-body">
+            <ol>
+                <li>Выберите регион в фильтрах или просмотрите все города</li>
+                <li>Оцените инвестиционный потенциал по цветовой индикации:
+                    <span class="badge bg-success">Высокий</span>
+                    <span class="badge bg-warning text-dark">Средний</span>
+                    <span class="badge bg-danger">Низкий</span>
+                </li>
+                <li>Сравните до 10 городов (требуется регистрация) или до 3 — без неё</li>
+                <li>Экспортируйте данные в CSV для дальнейшего анализа</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+        <a href="{% url 'main' %}" class="btn btn-primary btn-lg px-4 me-md-2">
+            📊 Перейти к анализу
+        </a>
+    </div>
+</div>
 {% endblock %}

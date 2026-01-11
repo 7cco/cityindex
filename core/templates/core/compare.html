@@ -1,22 +1,19 @@
 {% extends "base.html" %}
 
 {% block title %}
-<div class="d-flex">
-    <h1>Cities compare</h1>
-    <a href="{% url 'main' %}" class="btn btn-outline-primary">Back to list</a>
-</div>
+Сравнение городов
 {% endblock %}
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Compare cities</h1>
-    <a href="{% url 'main' %}" class="btn btn-outline-primary">Back</a>
+    <h1>Сравнение городов</h1>
+    <a href="{% url 'main' %}" class="btn btn-outline-primary">Назад</a>
     </div>
 
     {% if chart_html %}
     <div class="card mb-4">
         <div class="card-header bg-light">
-            <h5 class="mb-0">Compare components of index</h5>
+            <h5 class="mb-0">Сравнение компонентов индекса</h5>
         </div> 
         <div class="card-body">
             {{ chart_html|safe }}
@@ -27,20 +24,20 @@
 
 <div class="card">
     <div class="card-header bg-light">
-        <h5 class="mb-0">Detail stats</h5>
+        <h5 class="mb-0">Углубленная статистика</h5>
     </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead class="table-dark">
                     <tr>
-                        <th>City</th>
-                        <th>NDFL per capita</th>
-                        <th>Unemployment</th>
-                        <th>Schools/1k</th>
-                        <th>Gas stat/1k</th>
-                        <th>Bus stops/1k</th>
-                        <th>Index</th>
+                        <th>Город</th>
+                        <th>НДФЛ на душу населения</th>
+                        <th>Безработица</th>
+                        <th>Школы/1k</th>
+                        <th>АЗС/1k</th>
+                        <th>Остановки/1k</th>
+                        <th>Индекс</th>
                     </tr>
                 </thead>
                 <tbody>

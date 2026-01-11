@@ -6,8 +6,7 @@ import re
 import requests
 import pandas as pd
 import django
-from core.models import Locality, EconomicData, InfrastructureData
-from django.db import transaction
+from dotenv import load_dotenv
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,14 +14,20 @@ sys.path.append(BASE_DIR)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cityindex.settings')
 django.setup()
 
+from core.models import Locality, EconomicData, InfrastructureData
+from django.db import transaction
+
+
 OVERPASS_API_URL = "https://overpass-api.de/api/interpreter"
 NOMINATIM_API_URL = "https://nominatim.openstreetmap.org/search"
 
+load_dotenv()
+
+EMAIL = os.getenv('GORODINDEX_EMAIL', 'contact@gorodindex.local')
 HEADERS = {
-    'User-Agent': 'GorodIndex/1.0 (nsekerin568@gmail.com)',
+    'User-Agent': f'GorodIndex/1.0 ({EMAIL})',
     'Accept-Language': 'ru'
 }
-
 
 DATA_DIR = os.path.join(BASE_DIR, "data", "data_clean")
 NDLF_FILE = os.path.join(DATA_DIR, "ndfl.xlsx")
@@ -79,16 +84,6 @@ def ndfl(input_file):
     final_clean = final.sort_values(by=['Название', 'Население'])
     final_clean = final_clean.drop_duplicates(subset=['Название'], keep='first')
     return final_clean.reset_index(drop=True)
-
-
-def clean_city_name(name):
-    """Удаляет 'г. ', 'пгт ', 'с. ' и т.п."""
-    prefixes = ['г. ', 'пгт ', 'с. ', 'д. ', 'р.п. ', 'город ', 'Город ']
-    name = str(name).strip()
-    for prefix in prefixes:
-        if name.startswith(prefix):
-            return name[len(prefix):].strip()
-    return name
 
 
 def get_city_coordinates(city_name, region_name=None):
@@ -242,11 +237,11 @@ def get_unemployment_data():
     if 'Unnamed: 0' not in df_unemp.columns or 2023 not in df_unemp.columns:
         raise ValueError("В файле unemployment.xlsx должны быть колонки 'Unnamed: 0' и 2023")
 
-    # Создаём словарь: регион → безработица
+    # Создаём словарь: регион: безработица
     unemployment_dict = dict(zip(df_unemp['Unnamed: 0'], df_unemp[2023]))
     logger.info(f"Загружено {len(unemployment_dict)} регионов с данными о безработице.")
     
-    # Маппинг алиасов (краткие названия → полные)
+    # Маппинг алиасов (краткие названия: полные)
     REGION_ALIAS = {
         # Республики
         'Хакасия': 'Республика Хакасия',
@@ -317,7 +312,7 @@ def fetch_and_save_data():
     results = []
     for idx, row in cities_data.iterrows():
         raw_name = row['Название']
-        city_clean = clean_city_name(raw_name)
+        city_clean = raw_name[3:].strip()
         logger.info(f"[{idx+1}/{len(cities_data)}] Обработка: {raw_name} → '{city_clean}'")
 
         coords = get_city_coordinates(city_clean)
@@ -349,7 +344,7 @@ def fetch_and_save_data():
     with transaction.atomic():
         for item in results:
             # Создаем или обновляем запись о городе
-            locality, created = Locality.objects.update_or_create(
+            locality, _ = Locality.objects.update_or_create(
                 oktmo_code=item['oktmo_code'],
                 defaults={
                     'city': item['city_name'],
@@ -360,7 +355,7 @@ def fetch_and_save_data():
             )
             
             # Создаем или обновляем экономические данные
-            economic_data, created = EconomicData.objects.update_or_create(
+            EconomicData.objects.update_or_create(
                 locality=locality,
                 year=2023,
                 defaults={
@@ -370,7 +365,7 @@ def fetch_and_save_data():
             )
             
             # Создаем или обновляем данные об инфраструктуре
-            infra_data, created = InfrastructureData.objects.update_or_create(
+            InfrastructureData.objects.update_or_create(
                 locality=locality,
                 defaults={
                     'schools': item['infrastructure']['schools'],
