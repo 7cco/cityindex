@@ -60,6 +60,8 @@ cd cityindex
 
 `venv\Scripts\Activate.ps1`  #Windows
 
+**Создать .env на основе .env.example**
+
 **Установка зависимостей**
 `pip install -r requirements.txt`
 
